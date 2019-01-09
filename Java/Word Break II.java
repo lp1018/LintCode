@@ -1,21 +1,32 @@
 H
+1519546502
+tags: DP, Backtracking, DFS, Memoization, Hash Table
 
-两个DP一起用.解决了timeout的问题     
-1. isWord[i][j], subString(i,j)是否存在dict中？
+找出所有 word break variations, given dictionary
 
-2. 用isWord加快 isValid[i]: [i ～ end]是否可以从dict中找到合理的解？      
-	从末尾开始查看i：因为我们需要测试isWord[i][j]时候，j>i, 而我们观察的是[i,j]这区间；       
-	j>i的部分同样需要考虑，我们还需要知道isValid[0～j+1]。 所以isValid[x]这次是表示[x, end]是否valid的DP。     
-	i 从 末尾到0, 可能是因为考虑到isWord[i][j]都是在[0~n]之内，所以倒过来数，坐标比较容易搞清楚。     
-	(回头看Word Break I， 也有坐标反转的做法)
+利用 memoization: `Map<prefix, List<suffix variations>>`
 
-3. dfs 利用 isValid 和isWord做普通的DFS。
+#### DFS + Memoization
+- Realize the input s expands into a tree of possible prefixes.
+- We can do top->bottom(add candidate+backtracking) OR bottom->top(find list of candidates from subproblem, and cross-match)
+- DFS on string: find a valid word, dfs on the suffix. [NO backtraking in the solution]
+- DFS returns List<String>: every for loop takes a prefix substring, and append with all suffix (result of dfs)
+- IMPORANT: Memoization: `Map<prefix, List<suffix variations>>`, which reduces repeated calculation if the substring has been tried.
+- Time O(n!). Worst case, permutation of unique letters: `s= 'abcdef....'`, and `dict=[a,b,c,d,e,f...]`
 
-Note:
-在Word Break里面用了set.contains(...), 在isValid里面，i 从0开始。 但是，contains()本身是O(n).     
-在这道题里面应该是因为word dictionary太大，加上nest for, 变成O(n^3)所以timeout.
+#### Regular DPs
+- 两个DP一起用, 解决了timeout的问题: when a invalid case 'aaaaaaaaa' occurs, isValid[] stops dfs from occuring
+- 1. isWord[i][j], subString(i,j)是否存在dict中？
+- 2. 用isWord加快 isValid[i]: [i ～ end]是否可以从dict中找到合理的解？      
+- 从末尾开始查看i：因为我们需要测试isWord[i][j]时候，j>i, 而我们观察的是[i,j]这区间；       
+- j>i的部分同样需要考虑，我们还需要知道isValid[0～j+1]。 所以isValid[x]这次是表示[x, end]是否valid的DP。     
+- i 从 末尾到0, 可能是因为考虑到isWord[i][j]都是在[0~n]之内，所以倒过来数，坐标比较容易搞清楚。     
+- (回头看Word Break I， 也有坐标反转的做法)
+- 3. dfs 利用 isValid 和isWord做普通的DFS。
 
-istead,用一个isWord[i][j]，就O(1)判断了i~j是不是存在dictionary里面。
+#### Timeout Note
+- Regarding regular solution: 如果不做memoization或者dp, 'aaaaa....aaa' will repeatedly calculate same substring
+- Regarding double DP solution: 在Word Break里面用了set.contains(...), 在isValid里面，i 从0开始. 但是, contains()本身是O(n); intead,用一个isWord[i][j]，就O(1)判断了i~j是不是存在dictionary
 
 ```
 /*
@@ -34,113 +45,213 @@ Hide Company Tags Google Uber
 Hide Tags Dynamic Programming Backtracking
 
 */
-/*
-	Thoughts: DP
-	Check if s.substring(i,j) is a valid word
-		state: isWord[i][j]
-		function: isWord[i][j] = set.contains(s.substring(i, j + 1));
-	
-	Check if postFixed string is valid solution isValid[j]: [j+1, end] inclusive is valid or no?
-		state: isValid[i]
-		function: similar to in Word Break I
+// Simplier solution, memoization
+class Solution {
+    Map<String, List<String>> memo;
+    public List<String> wordBreak(String s, List<String> dict) {
+        List<String> rst = new ArrayList<>();
+        if (s == null || s.length() == 0 || dict == null || dict.size() == 0) return rst;
+        
+        // dfs
+        memo = new HashMap<>();
+        return dfs(new HashSet<>(dict), s);
+    }
 
-	DFS:
-		if isValid(i), and isWord(i,j) then go deeper
-*/
+    private List<String> dfs(Set<String> dict, String s) {
+        if (memo.containsKey(s)) return memo.get(s); // calculated, just return
+        List<String> rst = new ArrayList<>();
+        if (s.length() == 0) return rst;
+            
+        if (dict.contains(s)) rst.add(s); // total match word
 
-public class Solution {
-    public List<String> wordBreak(String s, Set<String> wordDict) {
-        List<String> rst = new ArrayList<String>();
-        if (s == null || s.length() == 0 || wordDict == null || wordDict.size() == 0) {
-        	return rst;
+        // loop over form index -> n, find candidates, validate, dfs
+        StringBuffer sb = new StringBuffer();
+        for (int i = 1; i < s.length(); i++) {
+            sb.append(s.charAt(i - 1));
+            if (!dict.contains(sb.toString())) {
+                continue;
+            }
+            String suffix = s.substring(i);
+            List<String> segments = dfs(dict, suffix);
+            for (String segment : segments) {
+                rst.add(sb.toString() + " " + segment);
+            }
         }
-    	
-    	boolean[][] isWord = validateWord(s, wordDict);
-    	boolean[] isValid = validatePossibility(s, wordDict, isWord);
-    	
-    	dfs(rst, new ArrayList<String>(), s, 0, isValid, isWord, wordDict);
-     	return rst;
+        memo.put(s, rst);
+        return rst;
+    }
+}
+
+// Just use memo, with void dfs.
+class Solution {
+    Map<String, List<String>> memo = new HashMap<>();
+    public List<String> wordBreak(String s, List<String> dict) {
+        List<String> rst = new ArrayList<>();
+        if (s == null || s.length() == 0 || dict == null || dict.size() == 0) return rst;
+        
+        dfs(new HashSet<>(dict), s);
+        return memo.get(s);
     }
 
-    public void dfs(List<String> rst, ArrayList<String> list, String s, 
-    				int index, boolean[] isValid, boolean[][] isWord, Set<String> set) {
-    	if (!isValid[index]) {
-    		return;
-    	}
-    	//output
-    	if (index >= s.length()) {
-    		StringBuffer sb = new StringBuffer();
-    		for (int i = 0; i < list.size(); i++) {
-    			sb.append(list.get(i));
-    			if (i != list.size() - 1) {
-    				sb.append(" ");
-    			}
-    		}
-		    rst.add(sb.toString());
-		    return;
-    	}
-    	//dfs
-    	for (int i = index; i < s.length(); i++) {
-    		if (!isWord[index][i]) {
-    			continue;
-    		}
-    		
-			list.add(s.substring(index, i + 1));
-			dfs(rst, list, s, i + 1, isValid, isWord, set);
-			list.remove(list.size() - 1);
-    	}
+    private void dfs(Set<String> dict, String s) {
+        List<String> rst = new ArrayList<>();
+        if (dict.contains(s)) rst.add(s); // match word, populate suffix variation list
+
+        // loop over form index -> n: set prefix and corss-match with all possible suffix variations
+        for (int i = 1; i < s.length(); i++) {
+            String prefix = s.substring(0, i);
+            if (!dict.contains(prefix)) continue; // validation with dict
+
+            String suffix = s.substring(i);
+            if (suffix.length() > 0 && !memo.containsKey(suffix)) { // if calculated, skip dfs
+                dfs(dict, suffix);    
+            }
+            List<String> segments = memo.get(suffix);
+            for (String segment : segments) {
+                rst.add(prefix + " " + segment);
+            }
+        }
+        memo.put(s, rst); // save result
     }
+}
 
-    //dp[i][j] check if s.substring(i,j) is a proper word from dictionary
-    public boolean[][] validateWord(String s, Set<String> set) {
-    	boolean[][] isWord = new boolean[s.length()][s.length()];
-    	for (int i = 0; i < s.length(); i++) {
-    		for (int j = i; j < s.length(); j++) {
-    			isWord[i][j] = set.contains(s.substring(i, j + 1));
-    		}
-    	}
-    	return isWord;
+/*
+Thoughts:
+Dict is a look up table. We need to backtrack on s && result list.
+When iterating over s && worst case of each remaining letter is a word, time: n * (n - 1) * (n - 2) * (n - 3) ... + 1 => O(n!)
+
+return result when s string is traversed completely.
+
+Questions to ask:
+1. all chars in s need to be used? 
+2. can we jump over chars in s? NO
+3. can we resume item in dict? YES
+
+Problem:
+dict.contains() is O(logN), so overall time went up to O(N! * LogN). Should improve.
+
+DP1:
+Is (i,j) a valid word form dictionary? DP[i][j] represents true/false valid word.
+
+DP2:
+for s[i,j] to be a valid entry in the result, s[0, i] has to be validated as well. 
+dp[i] represents: up to ith index, all substring ahead are valid
+*/
+class Solution {
+    public List<String> wordBreak(String s, List<String> wordDict) {
+        List<String> result = new ArrayList<>();
+        if(s == null || s.length() == 0 || wordDict == null || wordDict.size() == 0) {
+            return result;
+        }
+        
+        boolean[][] isWord = isWord(wordDict, s);
+        boolean[] isValid = validatePossibility(wordDict, isWord, s);
+        helper(result, new ArrayList<String>(), isWord, isValid, s, 0);
+        return result;
     }
+    
+    public void helper(List<String> result, List<String> list, boolean[][] isWord, boolean[] isValid, String s, int start) {
+        if (!isValid[start]) {
+            return;
+        }
+        if (start >= s.length()) {
+            StringBuffer sb = new StringBuffer();
+            for (String word : list) {
+                sb.append(word + " ");
+            }
+            result.add(sb.toString().trim());
+            return;
+        }
+        for (int i = start; i < s.length(); i++) {
+            if (!isWord[start][i]) {//O(1)
+                continue;
+            }
+            list.add(s.substring(start, i + 1));
+            helper(result, list, isWord, isValid, s, i + 1);
+            list.remove(list.size() - 1);
+        }
+    }
+    
+	// isWord[i][j]: is subString s[i, j] a word from dictionary?
+    public boolean[][] isWord(List<String> wordDict, String s) {
+        int n = s.length();
+        boolean[][] isWord = new boolean[n][n];
+        
+        for (int i = 0; i < n; i++) {
+            for (int j = i; j < n; j++) {
+                isWord[i][j] = wordDict.contains(s.substring(i, j + 1));
+            }
+        }
+        return isWord;
+    }
+    
+	/*
+		Verify: up to i letters, is it possible to satisfy the 'word break' rules?
+		Need to consider ith index: sequence DP, create dp[n + 1];
+		dp[i] = substring(i, j) valid && dp[after substring, j to end]
+        Calculating DP from right-side of the string: from the right side, we need to know the substring is valid, then move to left and check further
+	*/
+    public boolean[] validatePossibility(List<String> wordDict, boolean[][] isWord, String s) {
+        //optimize, find maxLength in wordDict to restrict string growth
+        int maxLen = 0;
+        for (String word : wordDict) {
+            maxLen = Math.max(maxLen, word.length());
+        }
 
-    //Build the validation boolean[]
-    public boolean[] validatePossibility(String s, Set<String> set, boolean[][] isWord) {
-    	/*
-    	boolean[] valid = new boolean[s.length() + 1];
-    	valid[s.length()] = true;
-
-    	int maxLeng = getMaxLength(set);
-    	for (int i = s.length() - 1; i >= 0; i--) {
-    		for (int j = i; j < s.length() && (j - i) <= maxLeng; j++) {
-    			if (isWord[i][j] && valid[j + 1]) {
-    				valid[i] = true;
-    				break;
-    			}
-    		}
-    	}*/
-    	boolean[] valid = new boolean[s.length() + 1];
-        valid[0] = true;
-        int maxLength = getMaxLength(set);
-        for (int i = 0; i < s.length(); i++) {
-            for (int j = 0; j < i && j < maxLength; j++) {//iterate [0 ~ i]
-                if (isWord[i - j][i] && isValid[i - j + 1])) {
-                    valid[i + 1] = true;
+        int n = s.length();
+        boolean[] isValid = new boolean[n + 1];
+        isValid[n] = true;
+        for (int i = n - 1; i >= 0; i--) {
+            for (int j = i; j < n; j++) {
+                if (isWord[i][j] && isValid[j + 1]) {
+                    isValid[i] = true;
                     break;
                 }
             }
         }
-
-    	return valid;
-    }
-
-    //Get max length, a little optimization
-    public int getMaxLength(Set<String> dict) {
-        int length = 0;
-        for (String word : dict) {
-            length = Math.max(length, word.length());
-        }
-        return length;
+        return isValid;
     }
 }
 
+// Valid, but timeout solution
+class Solution {
+    public List<String> wordBreak(String s, List<String> dict) {
+        // check s, dict, define 
+        List<String> rst = new ArrayList<>();
+        if (s == null || s.length() == 0 || dict == null || dict.size() == 0) {
+            return rst;
+        }
+        
+        // dfs
+        dfs(rst, new ArrayList<>(), new HashSet<>(dict), s, 0);
+
+        return rst;
+    }
+
+    private void dfs(List<String> rst, List<String> list, Set<String> dict, String s, int index) {
+        if (index == s.length()) {
+            StringBuffer sb = new StringBuffer();
+            for (String str : list) {
+                sb.append(str + " ");
+            }
+            rst.add(sb.toString().trim());
+            return;
+        }
+
+        // loop over form index -> n, find candidates, validate, dfs
+        StringBuffer sb = new StringBuffer();
+        for (int i = index; i < s.length(); i++) { // O(n - index)
+            sb.append(s.charAt(i));
+            
+            if (!dict.contains(sb.toString())) {
+                continue;
+            }
+
+            list.add(sb.toString());
+            dfs(rst, list, dict, s, i + 1);
+            list.remove(list.size() - 1);
+        }
+    }
+}
 
 ```

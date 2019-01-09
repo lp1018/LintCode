@@ -1,6 +1,19 @@
 M
+1519720374
+tags: Tree, DFS, BST, Divide and Conquer
 
-查看每个parent-child关系。同时把root level上面传下来max,min界限定住。
+如题, 验证是否是BST.
+
+#### DFS
+- 查看每个parent-child关系: leftchild < root < rightChild; 
+- BST 有两个极端: left-most-leaf is the smallest element, and right-most-leaf is largest
+- imagine we know the two extreme border: Integer.MIN_VALUE, Integer.MAX_VALUE; pass node around and compare node vs. node.parent.
+- 方法: 把root.val 传下来作为 max 或者 min, 然后检查children
+- 
+
+##### Note: 
+- min/max需要时long type. 
+- 如果题目真的给node.val = Integer.MAX_VALUE, 我们需要能够与之比较, long就可以.
 
 ```
 
@@ -28,18 +41,32 @@ Divide and Conquer Recursion Binary Search Tree Binary Tree
 
 
 */
-
 /**
- * Definition of TreeNode:
+ * Definition for a binary tree node.
  * public class TreeNode {
- *     public int val;
- *     public TreeNode left, right;
- *     public TreeNode(int val) {
- *         this.val = val;
- *         this.left = this.right = null;
- *     }
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
  * }
  */
+/*
+Thoughts:
+Pass along the min/max value as border for sub trees
+*/
+class Solution {
+    public boolean isValidBST(TreeNode root) {
+        return dfs(root, Long.MIN_VALUE, Long.MAX_VALUE) ;
+    }
+    public boolean dfs(TreeNode node, long min, long max) {
+        if (node == null) {
+            return true;
+        }
+        return node.val > min && node.val < max
+            && dfs(node.left, min, node.val) && dfs(node.right, node.val, max);
+    }
+}
+
 
 //recursively check if tree are BST, && them all
 

@@ -1,4 +1,6 @@
-M
+E
+1520920514
+tags: Binary Search
 
 Binary Search
 
@@ -37,6 +39,57 @@ Binary Search LintCode Copyright Facebook
 */
 
 /*
+Thoughts:
+Binary search on [1 .... n]. If prev == good, curr == bad -> return curr index.
+*/
+/* The isBadVersion API is defined in the parent class VersionControl.
+      boolean isBadVersion(int version); */
+
+public class Solution extends VersionControl {
+    public int firstBadVersion(int n) {
+        if (n <= 0) {
+            return n;
+        }
+        int start = 0;
+        int end = n;
+        while (start + 1 < end) {
+            int mid = start + (end - start) / 2;
+            if (isBadVersion(mid) && mid - 1 >= 1 && !isBadVersion(mid - 1)) {
+                return mid;
+            } else if (isBadVersion(mid)) {
+                end = mid;
+            } else {
+                start = mid;
+            }
+        }
+        return isBadVersion(start) ? start : end;
+    }
+}
+
+public class Solution extends VersionControl {
+    public int firstBadVersion(int n) {
+        if (n <= 0) {
+            return n;
+        }
+        int start = 0;
+        int end = n;
+        while (start <= end) {
+            int mid = start + (end - start) / 2;
+            if (isBadVersion(mid)) {
+                if (mid - 1 >= 1 && !isBadVersion(mid - 1)) {
+                    return mid;
+                }
+                end = mid - 1;
+            } else {
+                start = mid + 1;
+            }
+        }
+        return isBadVersion(start) ? start : end;
+    }
+}
+
+
+/*
     Recap: 12.07.2015.
     Feels like to find the 1st occurance of the match. going left all the way.
 */
@@ -73,11 +126,6 @@ class Solution {
         return end;
     }
 }
-
-
-
-
-
 
 
 class Solution {

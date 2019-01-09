@@ -1,10 +1,21 @@
 M
+1520355237
+tags: DFS, BFS, Union Find, Matrix DFS
 
-方法1: 两个for loop brutle force。 DFS把每个跟1相关的都Mark一遍.生成一个island.
+给一个2Dmatrix, 里面是1和0, 找#of island.
 
-方法2: （暂时没有写union-find的解）
-可以用union-find， 就像Number of island II 一样。
-只不过这个不Return list, 而只是# of islands
+#### DFS
+- More or less like a graph problem: visit all nodes connected with the starting node.
+- top level 有一个 double for loop, 查看每一个点.
+- 每当遇到1, count+1, 然后DFS helper function 把每个跟这个当下island 相关的都Mark成 '0'
+- 这样确保每个visited 过得island都被清扫干净
+- O(mn) time, visit all nodes
+
+#### Union Find
+- 可以用union-find， 就像Number of island II 一样.
+- 只不过这个不Return list, 而只是# of islands
+- Union Find is independent from the problem: it models the union status of integers.
+- 记住UnionFind的模板和几个变化(Connecting Graph I, II, III), 最后归总的代码写起来就比较简单.
 
 ```
 /*in
@@ -27,6 +38,7 @@ Note
 If two 1 is adjacent, we consider them in the same island. We only consider up/down/left/right adjacent.
 
 */
+
 
 /*
 Thoughts:
@@ -55,7 +67,7 @@ class Solution {
     }
     
     private void dfs(char[][] grid, int x, int y) {
-        if (x < 0 || x >= grid.length || y < 0 || y >= grid[0].length || grid[x][y] == '0') {
+        if (!validateInput(grid, x, y)) {
             return;
         }
         grid[x][y] = '0';
@@ -63,13 +75,110 @@ class Solution {
             dfs(grid, x + dx[i], y + dy[i]);
         }
     }
+
+    private boolean validateInput(char[][] grid, int x, int y) {
+        return x < 0 || x >= grid.length || y < 0 || y >= grid[0].length || grid[x][y] == '0';
+    }
 }
+
+/*
+Thoughts:
+Similart to ConnectingGraph, and we count # of unions left.
+Build UnionFind and let query return # of unions left (isolated island in this problem).
+Need to know which island to connect/union, need to go 4 directions.
+Convert 2D matrix to 1D index = rowNum * numOfColumn + colNum
+*/
+class Solution {
+    
+    int[] dx = {1, -1, 0, 0};
+    int[] dy = {0, 0, 1, -1};
+    public int numIslands(char[][] grid) {
+        if (grid == null || grid.length == 0 || grid[0] == null || grid[0].length == 0) {
+            return 0;
+        }
+        int m = grid.length;
+        int n = grid[0].length;
+        
+        UnionFind unionFind = new UnionFind(m * n);
+        int totalLandCount = 0;
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                totalLandCount += grid[i][j] == '1' ? 1 : 0;
+            }    
+        }
+        // # of island blocks, goal is to connect them all.
+        unionFind.setCount(totalLandCount);
+
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (grid[i][j] == '1') {
+                    for (int k = 0; k < dx.length; k++) { // 4 directions
+                        int x = i + dx[k];
+                        int y = j + dy[k];
+                        if (!validateInput(grid, x, y)) {
+                            // Attemp to union all of the 4 directions
+                            unionFind.union(convertToIndex(i, j, n), convertToIndex(x, y, n));
+                        }
+                    }
+                }
+            }    
+        }
+        
+        return unionFind.query();
+    }
+
+    // 1D index = rowNum * numOfColumn + colNum
+    private int convertToIndex(int x, int y, int rowLength) {
+        return x * rowLength + y;
+    }
+    private boolean validateInput(char[][] grid, int x, int y) {
+        return x < 0 || x >= grid.length || y < 0 || y >= grid[0].length || grid[x][y] == '0';
+    }
+}
+
+class UnionFind {
+    int father[] = null;
+    int count;
+
+    public UnionFind(int n) {
+        father = new int[n];
+        for (int i = 0; i < n; i++) {
+            father[i] = i;
+        }
+    }
+
+    public void union(int x, int y) {
+        int rootX = find(x);
+        int rootY = find(y);
+        if (rootX != rootY) {
+            father[rootX] = rootY;
+            count--;
+        }
+    }
+    
+    public int query() {
+        return count;
+    }
+    
+    public void setCount(int value) {
+        count = value;
+    }
+
+    private int find(int x) {
+        if (father[x] == x) {
+            return x;
+        }
+        return father[x] = find(father[x]);
+    }
+}
+
 
 /*
 Thoughts:
 UnionFind.
 Traverse all points of grid and count the total number of island. See Number of Islands II for details.
-Note: need to initialize the 1D array first with all 1's. Therefore, when we start perform union-find, we already have knowledge of entire island status.
+Note: need to initialize the 1D array first with all 1's. 
+Therefore, when we start perform union-find, we already have knowledge of entire island status.
 
 However, it's not as straight-forward as DFS though.
 */

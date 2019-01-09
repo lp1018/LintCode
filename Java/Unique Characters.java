@@ -1,7 +1,22 @@
-不用额外data structure, O(n^2), double for loop.
-用hashSet, space O(n), time O(n)
+E
+1531457659
+tags: String, Array
+
+determine if characters are unique in string
+
+#### HashSet
+- space O(n), time O(n)
+
+#### char[]
+- space O(n), time O(nlogn)
+
+#### no additional data structure
+- double for loop:  O(n^2)
+
+
 ```
 /*
+LintCode
 Implement an algorithm to determine if a string has all unique characters.
 
 Example
@@ -16,44 +31,24 @@ Tags Expand
 String Cracking The Coding Interview Array
 */
 
-/*
-	Thought:
-	do it without hash set.
-	Can do a double-for loop, check from i~j, if str[i] exist later in the string.
-	O(n^2)
-*/
-
 public class Solution {
-    /**
-     * @param str: a string
-     * @return: a boolean
-     */
     public boolean isUnique(String str) {
-		if (str == null || str.length() == 0) {
-    		return true;
-    	}
-    	for (int i = 0; i < str.length(); i++) {
-    		for (int j = i + 1; j < str.length(); j++) {
-    			if (str.charAt(i) == str.charAt(j)) {
-    				return false;
-    			}
-    		}
+    	if (str == null || str.length() == 0) return true;
+
+    	char[] arr = str.toCharArray(); // nlogn
+		Arrays.sort(arr);
+    	for (int i = 1; i < arr.length; i++) {
+			if (arr[i] == arr[i - 1]) return false;
     	}
     	return true;
     }
 }
-
-
 
 /*
 	Thought:
 	1st, write hasset, there you go.
 */
 public class Solution {
-    /**
-     * @param str: a string
-     * @return: a boolean
-     */
     public boolean isUnique(String str) {
     	if (str == null || str.length() == 0) {
     		return true;
@@ -70,5 +65,29 @@ public class Solution {
     	return true;
     }
 }
+
+/*
+	Thought:
+	do it without hash set.
+	Can do a double-for loop, check from i~j, if str[i] exist later in the string.
+	O(n^2)
+*/
+
+public class Solution {
+    public boolean isUnique(String str) {
+		if (str == null || str.length() == 0) {
+    		return true;
+    	}
+    	for (int i = 0; i < str.length(); i++) {
+    		for (int j = i + 1; j < str.length(); j++) {
+    			if (str.charAt(i) == str.charAt(j)) {
+    				return false;
+    			}
+    		}
+    	}
+    	return true;
+    }
+}
+
 
 ```

@@ -1,11 +1,24 @@
 E
+1519797926
+tags: Binary Tree, DFS, Backtracking
 
-方法1：   
-Recursive:分叉。Helper。
+给一个binary tree, 返回所有root-to-leaf path
 
-方法2，Iterative:    
-   非递归练习了一下   
-   因为要每次切短list, 所以再加了一个Stack 来存level   
+#### DFS, backtracking
+- Find all paths, bfs/dfs all works. dfs will be simplier to write
+- Recursive:分叉. dfs.
+- top->bottom: enumerate current node into the list, carry to next level, and backtrack
+- top->bottom is trivial to consider: path flows from top->bottom
+
+#### DFS, bottom->up
+- We can also take current node.left or node.right to generate list of results from the subproblem
+- let dfs return list of string candidates, and we can run pair the list with currenet node, once they come back.
+- TODO: can write code to practice
+
+#### Iterative
+- Iterative, 非递归练习了一下
+- 因为要每次切短list, 所以再加了一个Stack 来存level
+- 单这道题用dfs更简单, 因为找的就是从头到尾的path, 是dfs的pattern
 
 
 ```
@@ -32,7 +45,82 @@ Tags Expand
 Binary Tree Binary Tree Traversal Facebook Google
 */
 
+// cleaner:
+class Solution {
+    public List<String> binaryTreePaths(TreeNode root) {
+        List<String> rst = new ArrayList<>();
+        if (root == null) {
+            return rst;
+        }
+        dfs(rst, new ArrayList<>(), root);
+        return rst;
+    }
+    
+    public void dfs(List<String> rst, List<Integer> list, TreeNode node) {
+        if (node == null) return;
+        
+        list.add(node.val);
+        if (node.left == null && node.right == null) {
+            rst.add(convert(list));
+            list.remove(list.size() - 1);
+            return;
+        }
+        
+        dfs(rst, list, node.left);
+        dfs(rst, list, node.right);
+        list.remove(list.size() - 1);
+    }
+    
+    private String convert(List<Integer> list) {
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < list.size() - 1; i++) {
+            sb.append(list.get(i) + "->");
+        }
+        sb.append(list.get(list.size() - 1));
+        return sb.toString();
+    }
+}
+
 /*
+Basic dfs, pass along sb, List<String>.
+Save when root == null.
+*/
+class Solution {
+    public List<String> binaryTreePaths(TreeNode root) {
+        List<String> rst = new ArrayList<>();
+        if (root == null) {
+            return rst;
+        }
+        dfs(rst, new ArrayList<>(), root);
+        return rst;
+    }
+    
+    public void dfs(List<String> rst, List<Integer> list, TreeNode node) {
+        list.add(node.val);
+        if (node.left == null && node.right == null) {
+            StringBuffer sb = new StringBuffer();
+            for (int i = 0; i < list.size() - 1; i++) {
+                sb.append(list.get(i) + "->");
+            }
+            sb.append(list.get(list.size() - 1));
+            rst.add(sb.toString());
+            return;
+        }
+        
+        if (node.left != null) {
+            dfs(rst, list, node.left);
+            list.remove(list.size() - 1);
+        }
+        if (node.right != null) {
+            dfs(rst, list, node.right);
+            list.remove(list.size() - 1);
+        }
+    }
+}
+
+
+/*
+Previous notes
 	Thoughts:
 	Recursive, need a helper (root, arraylist<Integer> list, List<String>)
 	Add curr.
@@ -44,42 +132,6 @@ Binary Tree Binary Tree Traversal Facebook Google
 
 	time: 2715m
 */
-
-public class Solution {
-    /**
-     * @param root the root of the binary tree
-     * @return all root-to-leaf paths
-     */
-    public List<String> binaryTreePaths(TreeNode root) {
-    	List<String> rst = new ArrayList<String>();
-    	if (root == null) {
-    		return rst;
-    	}
-    	helper(root, rst, new ArrayList<Integer>());
-    	return rst;
-    }
-
-    public void helper(TreeNode root, List<String> rst, ArrayList<Integer> list){
-    	list.add(root.val);
-    	if (root.left == null && root.right == null) {
-    		StringBuffer sb = new StringBuffer();
-    		for (int i = 0; i < list.size() - 1; i++) {
-    			sb.append(list.get(i) + "->");
-    		}
-    		sb.append(list.get(list.size() - 1));
-    		rst.add(sb.toString());
-    	}
-    	if (root.left != null) {
-    		helper(root.left, rst, list);
-    		list.remove(list.size() - 1);
-    	}
-    	if (root.right != null) {
-    		helper(root.right, rst, list);
-    		list.remove(list.size() - 1);
-    	}
-    }
-}
-
 
 /*
 	Iterative:
@@ -144,14 +196,5 @@ public class Solution {
  *     }
  * }
  */
-
-
-
-
-
-
-
-
-
 
 ```

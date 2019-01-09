@@ -1,26 +1,158 @@
 H
+1520570560
+tags: Backtracking, Trie, DFS
 
-Big improvement: use boolean visited on TrieNode!     
-不要用rst.contains(...), 因为这个是O(n) 在leetcode还是会timeout（lintcode竟然可以pass）!    
-在Trie search() method 里面，凡是visit过的，mark一下。  
+给一串words, 还有一个2D character matrix. 找到所有可以形成的words. 条件: 2D matrix 只可以相邻走位.
 
-Regular:   
-for loop on words: inside, do board DFS based on each word.     
-Time cpmplexity: word[].length * boardWidth * boardHeight * (4^wordMaxLength)
+#### Trie, DFS
+- 相比之前的implementation, 有一些地方可以优化:
+- 1. Backtracking时候, 在board[][] 上面mark就可以, 不需要开一个visited[][]
+- 2. 不需要implement trie的所有方程, 用不到: 这里只需要insert.
+- 普通的trie题目会让你search a word, 但是这里是用一个board, 看board的每一个字母能不能走出个Word.
+- 也就是: 这里的search是自己手动写, 不是传统的trie search() funcombination
+- 3. TrieNode里面存在 end的时候存string word, 表示到底. 用完了 word = null, 刚好截断重复查找的问题.
 
-Build Trie with target words: insert, search, startWith.    
-依然要对board matrix做DFS。
+##### 关于Trie
+- Build Trie with target words: insert, search, startWith. Sometimes, just: `buildTree(words)` and return root.
+- 依然要对board matrix做DFS。
+- no for loop on words. 直接对board DFS:   
+- 每一层,都会有个up-to-this-point的string. 在Trie里面check它是不是存在。以此判断。   
+- 若不存在，就不必继续DFS下去了。
+- Trie solution time complexity, much better:      
+- build Trie:   n * wordMaxLength
+- search: boardWidth * boardHeight * (4^wordMaxLength + wordMaxLength[Trie Search])
 
-no for loop on words. 直接对board DFS:   
-每一层,都会有个up-to-this-point的string. 在Trie里面check它是不是存在。以此判断。   
-若不存在，就不必继续DFS下去了。
 
-Trie solution time complexity, much better:      
-build Trie:   n * wordMaxLength
-search: boardWidth * boardHeight * (4^wordMaxLength + wordMaxLength[Trie Search])
+#### Regular DFS
+- for loop on words: inside, do board DFS based on each word.     
+- Time cpmplexity: word[].length * boardWidth * boardHeight * (4^wordMaxLength)
+
+#### Previous Notes
+- Big improvement: use boolean visited on TrieNode!     
+- 不要用rst.contains(...), 因为这个是O(n) 在leetcode还是会timeout（lintcode竟然可以pass）!    
+- 在Trie search() method 里面，凡是visit过的，mark一下。  
 
 
 ```
+/*
+LeetCode
+Given a 2D board and a list of words from the dictionary, find all words in the board.
+
+Each word must be constructed from letters of sequentially adjacent cell, 
+where "adjacent" cells are those horizontally or vertically neighboring. 
+
+The same letter cell may not be used more than once in a word.
+
+For example,
+Given words = ["oath","pea","eat","rain"] and board =
+
+[
+  ['o','a','a','n'],
+  ['e','t','a','e'],
+  ['i','h','k','r'],
+  ['i','f','l','v']
+]
+Return ["eat","oath"].
+Note:
+You may assume that all inputs are consist of lowercase letters a-z.
+
+Hint:
+
+You would need to optimize your backtracking to pass the larger test. Could you stop backtracking earlier?
+
+If the current candidate does not exist in all words' prefix, 
+you could stop backtracking immediately. What kind of data structure could answer such query efficiently? 
+Does a hash table work? Why or why not? How about a Trie? If you would like to learn how to implement a basic trie, 
+please work on this problem: Implement Trie (Prefix Tree) first.
+
+ */
+/*
+Thoughts:
+Simplify the problem: want to find the words' existance based on the trie structure.
+1. Build the trie with the words.
+2. DFS and backtracking with the board and see if the combination exist.
+
+Build Trie:
+  time: O(mn), m = words.length, n = max word.length
+Search with dfs
+  board[k][k] -> k^2
+  longest word: n
+  O(k^2 * n)
+
+Overall: O(k^2 * n) + O(mn) = O(mn), k should be small
+*/
+/*
+Thoughts:
+Simplify the problem: want to find the words' existance based on the trie structure.
+1. Build the trie with the words.
+2. DFS and backtracking with the board and see if the combination exist.
+*/
+class Solution {
+    class TrieNode {
+        String word;
+        TrieNode[] children;
+        public TrieNode() {
+            this.word = null;
+            this.children = new TrieNode[26];
+        }
+    }
+    int[] dx = {0, 0, 1, -1};
+    int[] dy = {1, -1, 0, 0};
+    public List<String> findWords(char[][] board, String[] words) {
+        List<String> result = new ArrayList<>();
+        if (validateInput(board, words)) return result;
+        
+        // Build trie
+        TrieNode root = buildTrie(words);
+        Set<String> set = new HashSet<>();
+        // DFS and populate the result
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[0].length; j++) {
+                dfs(root, board, i, j, set);
+            }
+        }
+        result.addAll(set);
+        return result;
+    }
+    
+    private void dfs(TrieNode node, char[][] board, int x, int y, Set<String> set) {
+        if (x < 0 || x >= board.length || y < 0 || y >= board[0].length) return;
+        char c = board[x][y];
+        if (c == '#' || node.children[c - 'a'] == null) return;
+
+        node = node.children[c - 'a'];
+        
+        // Found the match
+        if (node.word != null && !set.contains(node.word)) set.add(node.word);
+
+        // Moving forward and backtracking
+        board[x][y] = '#';
+        for (int i = 0; i < 4; i++) {
+            dfs(node, board, x + dx[i], y + dy[i], set);
+        }
+        board[x][y] = c;
+    }
+    
+    private TrieNode buildTrie(String[] dict) {
+        TrieNode root = new TrieNode();
+        for (String word : dict) {
+            TrieNode node = root;
+            for (char c : word.toCharArray()) {
+                int index = c - 'a';
+                if (node.children[index] == null) node.children[index] = new TrieNode();
+                node = node.children[index];
+            }
+            node.word = word;
+        }
+        return root;
+    }
+
+    private boolean validateInput(char[][] board, String[] words) {
+        return board == null || board.length == 0 || board[0] == null || board[0].length == 0
+           || words == null || words.length == 0;
+    }   
+}
+
 /*
 Given a matrix of lower alphabets and a dictionary. Find all words in the dictionary that can be found in the matrix. A word can start from any position in the matrix and go left/right/up/down to the adjacent position. 
 

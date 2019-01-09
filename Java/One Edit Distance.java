@@ -1,39 +1,63 @@
 M
+1533623972
+tags: String
 
-理解Edit: 就是删除，增加，和替换。    
-换完之后，理论上换成的String 就应该全等             
-一旦找到不一样的char, 就判断那三种可能性      
+如果S, T只用一个operation就能变成相等, return true.
+
+#### Edit: 删除，增加，和替换
+- 换完之后，理论上换成的String 就应该全等
+- for loop, 一旦找到不一样的char, 就判断那三种可能性: insert/delete/replace
+- insert/delete 对于2个string来说, 效果是类似的
+- O(n)
 
 ```
 /*
 Given two strings S and T, determine if they are both one edit distance apart.
 
-Hide Company Tags Uber Facebook
-Hide Tags String
-Hide Similar Problems (H) Edit Distance
-
 */
+class Solution {
+    public boolean isOneEditDistance(String s, String t) {
+        if (s == null || t == null || s.equals(t) || Math.abs(s.length() - t.length()) > 1) {
+            return false;
+        }
+        int size = Math.min(s.length(), t.length());
+        for (int i = 0; i < size; i++) {
+            if (s.charAt(i) != t.charAt(i)) { // check insert/delete or replace
+                return compareStr(s, t, i + 1, i) || compareStr(s, t, i, i + 1) || compareStr(s, t, i + 1, i + 1);
+            }
+        }
+        
+        return true; // size == 0, and length diff == 1
+    }
+    
+    private boolean compareStr(String s, String t, int x, int y) {
+        return s.substring(x).equals(t.substring(y));
+    }
+}
 
-/*Recap 3.7.2016
-edit: insert, remove, replace. edit once and they will be same string.
+/*
+Thoughts:
+Insert/Delete/Replace.
+Insert/Delete have similar effect regarding the 2 strings.
+Loop over s and t. When there is diff, apply one of the operations, compare && return
 */
-public class Solution {
+class Solution {
     public boolean isOneEditDistance(String s, String t) {
         if (s == null || t == null || s.equals(t) || Math.abs(s.length() - t.length()) > 1) {
             return false;
         }
         int size = s.length() > t.length() ? t.length() : s.length();
-        
         for (int i = 0; i < size; i++) {
-            if (t.charAt(i) != s.charAt(i)) {
-                //check delete and insert
-                if (t.substring(i + 1).equals(s.substring(i)) || t.substring(i).equals(s.substring(i + 1))) {
+            if (s.charAt(i) != t.charAt(i)) {
+                // insert/delete 
+                if (s.substring(i + 1).equals(t.substring(i)) || s.substring(i).equals(t.substring(i + 1))) {
                     return true;
                 }
-                //check replace
-                return t.substring(i + 1).equals(s.substring(i + 1));
+                // check replace
+                return s.substring(i + 1).equals(t.substring(i + 1));
             }
         }
+        // size == 0, and length diff == 1
         return true;
     }
 }

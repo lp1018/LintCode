@@ -1,4 +1,20 @@
 M
+1521312479
+tags: Array, DP, Coordinate DP
+
+2D array, 算走到最右下角，有多少种方式.
+
+##### DP
+- 计数DP.注意方程式前两位置加在一起: 前两种情况没有overlap, 也不会缺情况.
+- 注意initialization, 归1.
+- 需要initialize的原因是,也是一个reminder: 在方程中会出现-1index
+- Of course, row i = 0, or col j = 0, there is only 1 way to access
+- time O(mn), space O(mn)
+
+##### 滚动数组
+- [i] 只跟 [i - 1] 有关系, 用 curr/prev 建立滚动数组.
+- space O(n) 优化空间
+
 
 ```
 /*
@@ -24,15 +40,84 @@ Array Dynamic Programming
 
 */
 
+
+
 /*
-    3.25.2016 recap
-    Regular DFS: each spot has 2 possible way out: right/down. We can count++ whenever we reach end.
-    This pattern seems to be DP:
-        Use a DP[i][j] to store: the # of possible paths to reach coordinate (i,j)
-        
+Thoughts:
+Count # of ways to reach bottom-right: it depends on top/left
+dp[i][j] = dp[i - 1][j] + dp[i][j - 1];
+Init:
+For all i == 0, there is only 1 way to reach each spot: can only move down or right.
+
+Rolling Array:
+1st dimension [i] only deals with [i - 1].
+Build rolling array to save space: O(n)
 */
+class Solution {
+    public int uniquePaths(int m, int n) {
+        if (m <= 0 || n <= 0) {
+            return 0;
+        }
+        int[][] dp = new int[2][n];
+        int curr = 0;
+        int prev = 0;
+        // Init j = 0 col
+        for (int i = 0; i < 2; i++) {
+            dp[i][0] = 1;
+        }
+        // Init i = 0 row
+        for (int j = 0; j < n; j++) {
+            dp[curr][j] = 1;
+        }
+        
+        // Calcualte the dp[i][j]
+        for (int i = 1; i < m; i++) {
+            prev = curr;
+            curr = 1 - prev;
+            for (int j = 1; j < n; j++) {
+                dp[curr][j] = dp[prev][j] + dp[curr][j - 1];
+            }
+        }
+        
+        return dp[curr][n - 1];
+    }
+}
 
 
+/*
+Thoughts:
+'how many ways' -> Could do DFS, but try DP
+Robot moves: (0, 1) or (1, 0)
+gird[x][y]: #paths to reach x,y.
+There are only 2 ways for getting to (x, y): from (x-1, y) or (x, y-1)
+Then, the sub problem is grid[x-1,y], and grid[x, y-1].
+grid[x][y] = Math.min(grid[x-1,y], grid[x, y-1]) + 1;
+
+Boundary: when x = 0, grid[0, 0~y] = 0~y; same for y=0, grid[0~x, 0] = 0~x;
+Path: should go from y++ and y=0, because when we advance +1 row, we'd use previous x/y, which should be calculated already.
+*/
+class Solution {
+    public int uniquePaths(int m, int n) {
+        if (m == 0 || n == 0) {
+            return 0;
+        }
+        // Initialization
+        final int[][] grid = new int[m][n];
+        for (int i = 0; i < n; i++) {
+            grid[0][i] = 1;
+        }
+        for (int i = 0; i < m; i++) {
+            grid[i][0] = 1;
+        }
+        // Calculate based on equation
+        for (int i = 1; i < m; i++) {
+            for (int j = 1; j < n; j++) {
+                grid[i][j] = grid[i - 1][j] + grid[i][j - 1];
+            }
+        }
+        return grid[m-1][n-1];        
+    }
+}
 
 /*
 Thinking process:

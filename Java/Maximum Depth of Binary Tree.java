@@ -1,13 +1,25 @@
 E
+1525668591
+tags: DFS, Tree
 
-DFS: Divide and conquer. 维持一个最大值。
+给一个binary tree, 找最深depth
+
+#### DFS
+- 这里要走过所有的node, 所以dfs非常合适
+- Divide and conquer. 
+- 维持一个最大值: Math.max(maxDepth(root.left), maxDepth(root.right)) + 1;
+- 注意check root == null
+
+#### Note
+- BFS is doable as well, but a bit more code to write: tracks largest level we reach
 
 ```
 /*
 71% Accepted
 Given a binary tree, find its maximum depth.
 
-The maximum depth is the number of nodes along the longest path from the root node down to the farthest leaf node.
+The maximum depth is the number of nodes along the longest path 
+from the root node down to the farthest leaf node.
 
 Example
 Given a binary tree as follow:
@@ -27,11 +39,23 @@ The maximum depth is 3
 Tags Expand 
 Tree Binary Tree Depth First Search
 
-Thinking process:
-check if root is null, return 0 if so.
-Divide and return integer as the depth
-Conquer: find the max and return depth + 1.
 */
+
+
+/*
+Thoughts:
+DFS. Find all depth and return max alone the way
+Check leaf child: (null, null) condition -> return 1
+Then upper parent = Math.max(DFS(left), DFS(right)) + 1
+*/
+public class Solution {
+    public int maxDepth(TreeNode root) {
+        if (root == null) {
+            return 0;
+        }
+        return Math.max(maxDepth(root.left), maxDepth(root.right)) + 1;
+    }
+}
 
 /**
  * Definition of TreeNode:
@@ -43,6 +67,12 @@ Conquer: find the max and return depth + 1.
  *         this.left = this.right = null;
  *     }
  * }
+ */
+/**
+Thinking process:
+check if root is null, return 0 if so.
+Divide and return integer as the depth
+Conquer: find the max and return depth + 1.
  */
 public class Solution {
     /**
@@ -61,19 +91,5 @@ public class Solution {
     }
 }
 
-/*
-Thoughts:
-DFS. Find all depth and return max alone the way
-Check leaf child: (null, null) condition -> return 1
-Then upper parent = Math.max(DFS(left), DFS(right)) + 1
-*/
-public class Solution {
-    public int maxDepth(TreeNode root) {
-        if (root == null) {
-            return 0;
-        }
-        return Math.max(maxDepth(root.left), maxDepth(root.right)) + 1;
-    }
-}
 
 ```

@@ -1,8 +1,11 @@
+M
+tags: DP
+
 这个DP有点诡异. 需要斟酌。
 NOT DONE YET
 ```
 /*
-There is a stone game.At the beginning of the game the player picks n piles of stones in a line.
+There is a stone game. At the beginning of the game the player picks n piles of stones in a line.
 
 The goal is to merge the stones in one pile observing the following rules:
 

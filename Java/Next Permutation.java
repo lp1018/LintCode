@@ -1,6 +1,7 @@
 M
+tags: Array
 
-需斟酌。
+需斟酌: why reverse is need? why we are looking for k?
 
 Permutation的规律:     
 1. 从小的数字开始变化因为都是从小的数字开始recursive遍历。    
@@ -52,22 +53,18 @@ To find the next smallest permutation.
     Still a bit confused on why we take these steps in this problem)
 */
 
+/*
+Thoughts:
+1. 找到最后一个下降点，谷底, k      
+2. 从后往前，找到第一个比k大的点, bigIndex      
+3. swap k &&　bigIndex     
+4. 最后反转 (k+1，end)     
+*/
 public class Solution {
-    //Revers the given part of a int[]
-    public int[] reverse(int start, int end, int[] nums) {
-        for (int i = start, j = end; i < j; i++,j--) {
-            int temp = nums[i];
-            nums[i] = nums[j];
-            nums[j] = temp;
-        }
-        return nums;
-    }
-    
     public int[] nextPermutation(int[] nums) {
-        if (nums == null || nums.length == 0) {
-            return nums;
-        }
-        //Find last increasing point before decreasing. nums[k] < nums[k+1]
+        if (nums == null || nums.length == 0) return nums;
+        
+        //Find the bottom: initial increasing point after decreasing. nums[k] < nums[k+1]
         int k = -1;
         for (int i = nums.length - 2; i >= 0; i--) {
             if (nums[i] < nums[i + 1]) {
@@ -78,7 +75,7 @@ public class Solution {
         if (k == -1) {
             return reverse(0, nums.length - 1, nums);
         }
-        //Find first bigger point, from right to left
+        //Find the last point, from right to left
         int bigIndex = -1;
         for (int i = nums.length - 1; i >= 0; i--) {
             if (nums[i] > nums[k]) {
@@ -86,17 +83,28 @@ public class Solution {
                 break;
             }
         }
-        //1. Swap bigger index with k; 2. Reverse the right side of k. [Try to make the smallest next permutation]
-        int temp = nums[k];
-        nums[k] = nums[bigIndex];
-        nums[bigIndex] = temp;
+        //1. Swap bigger index with k;
+        swap(nums, k, bigIndex);
 
+        //2. Reverse the right side of k to generate the smallest next permutation
         return reverse(k + 1, nums.length - 1, nums);
     }
 
+    private void swap(int[] nums, int x, int y) {
+        int temp = nums[x];
+        nums[x] = nums[y];
+        nums[y] = temp;
+    }
 
-
+    //Revers the given part of a int[]
+    private int[] reverse(int start, int end, int[] nums) {
+        for (int i = start, j = end; i < j; i++,j--) {
+            swap(nums, i, j);
+        }
+        return nums;
+    }
 }
+
 
 
 ```

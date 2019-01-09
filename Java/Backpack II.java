@@ -1,13 +1,21 @@
 M
+1524202756
+tags: DP, Backpack DP
 
-做了Backpack I, 这个就如出一辙。   
-想法还是，选了A[i-1] 或者没选A[i].   
-一路往前跑不回头。就出来了。   
-其实这个Backpack II 还更容易看懂代码。
+给i本书, 每本书有自己的重量 int[] A, 每本书有value int[] V
 
-O(m)的做法:   
-想想，的确我们只care 最后一行，所以一个存value的就够了。    
-注意：和bakcpackI的 O(m)一样的，j是倒序的。如果没有更好的j，就不要更新。就是这个道理。   
+背包有自己的大小M, 看最多能放多少value的书?
+
+#### Backpack DP
+- 做了Backpack I, 这个就如出一辙, 只不过: dp存的不是max weight, 而是 value的最大值.
+- 想法还是，选了A[i - 1] 或者没选A[i - 1]时候不同的value值.
+- 时间空间O(mn)
+- Rolling Array, 空间O(m)
+
+#### Previous DP Solution
+- 如果无法达到的w, 应该mark as impossible. 一种简单做法是mark as -1 in dp. 
+- 如果有负数value, 就不能这样, 而是要开一个can[i][w]数组, 也就是backpack I 的原型.
+- 这样做似乎要多一些代码, 好像并不是非常需要
 
 
 ```
@@ -30,8 +38,200 @@ Tags Expand
 LintCode Copyright Dynamic Programming Backpack
 */
 
+/**
+Thoughts:
+dp[i][j]: 前i item, 放进weight/size = j 的袋子里的最大value.
+constraint: weight
+result: aggregate item value
+ */
+public class Solution {
+    public int backPackII(int m, int[] A, int V[]) {
+        if (A == null || V == null || A.length != V.length) {
+            return 0;
+        }
+        int n = A.length;
+        int[][] dp = new int[n + 1][m + 1];
+
+        for (int i = 1; i <= n; i++) {
+            for (int j = 0; j <= m; j++) {
+                dp[i][j] = dp[i - 1][j];
+                if (j - A[i - 1] >= 0) {
+                   dp[i][j] = Math.max(dp[i][j], dp[i - 1][j - A[i - 1]] + V[i - 1]); 
+                }
+                
+            }
+        }
+        
+        return dp[n][m];
+    }
+}
+
+// Rolling array:
+public class Solution {
+    public int backPackII(int m, int[] A, int V[]) {
+        if (A == null || V == null || A.length != V.length) {
+            return 0;
+        }
+        int n = A.length;
+        int[][] dp = new int[2][m + 1];
+
+        for (int i = 1; i <= n; i++) {
+            for (int j = 0; j <= m; j++) {
+                dp[i % 2][j] = dp[(i - 1) % 2][j];
+                if (j - A[i - 1] >= 0) {
+                   dp[i % 2][j] = Math.max(dp[i % 2][j], dp[(i - 1) % 2][j - A[i - 1]] + V[i - 1]); 
+                }
+                
+            }
+        }
+        
+        return dp[n % 2][m];
+    }
+}
 
 /*
+Thoughts:
+Dealing with value, the dp[i][w] = max value that can be formed over i tems at weight w.
+Two conditions:
+1. didn't pick A[i - 1]: dp[i - 1][w], value sum does not change.
+2. Picked A[i - 1]: dp[i - 1][w - A[i - 1]] + V[i - 1];
+Find the max of the above two, and record.
+Initialize with dp[0][0] = -1: not possible to form w, so mark as -1, impossible.
+*/
+
+public class Solution {
+    public int backPackII(int m, int[] A, int V[]) {
+        if (A == null || V == null || A.length != V.length) {
+            return 0;
+        }
+        int n = A.length;
+        int[][] dp = new int[n + 1][m + 1]; // [5][5]
+        
+        for (int j = 0; j <= m; j++) {
+            dp[0][j] = -1; // 0 items cannot form weight j, hence value -1, marking impossible
+        }
+		dp[0][0] = 0; // 0 items, 0 weight -> 0 value
+    
+        for (int i = 1; i <= n; i++) {
+            for (int j = 1; j <= m; j++) {
+                dp[i][j] = dp[i - 1][j]; // 0
+                if (j - A[i - 1] >= 0 && dp[i - 1][j - A[i - 1]] != -1) {
+                   dp[i][j] = Math.max(dp[i][j], dp[i - 1][j - A[i - 1]] + V[i - 1]); 
+                }
+                
+            }
+        }
+        
+        int rst = 0;
+        for (int j = 0; j <= m; j++) {
+            if (dp[n][j] != -1) {
+                rst = Math.max(rst, dp[n][j]);
+            }
+        }
+        return rst;
+    }
+}
+
+// Rolling array
+public class Solution {
+    public int backPackII(int m, int[] A, int V[]) {
+        if (A == null || V == null || A.length != V.length) {
+            return 0;
+        }
+        int n = A.length;
+        int[][] dp = new int[2][m + 1];
+        for (int j = 0; j <= m; j++) {
+            dp[0][j] = -1; // 0 items cannot form weight j, hence value -1, mark as impossible
+        }
+		dp[0][0] = 0; // 0 items, 0 weight -> 0 value
+		int curr = 0, prev;
+    
+        for (int i = 1; i <= n; i++) {
+			// rolling index
+			prev = curr;
+			curr = 1 - prev;
+            for (int j = 1; j <= m; j++) {
+                dp[curr][j] = dp[prev][j]; // 0
+                if (j - A[i - 1] >= 0 && dp[prev][j - A[i - 1]] != -1) {
+                   dp[curr][j] = Math.max(dp[curr][j], dp[prev][j - A[i - 1]] + V[i - 1]); 
+                }
+            }
+        }
+		
+		int rst = 0;
+        for (int j = 0; j <= m; j++) {
+            if (dp[curr][j] != -1) {
+                rst = Math.max(rst, dp[curr][j]);
+            }
+        }
+        return rst;
+    }
+}
+
+
+
+
+
+/*
+Initialize with dp[0][0] = 0.
+This will pass the test, however it's not 100% explicit
+*/
+public class Solution {
+    public int backPackII(int m, int[] A, int V[]) {
+        if (A == null || V == null || A.length != V.length) {
+            return 0;
+        }
+        int n = A.length;
+        int[][] dp = new int[n + 1][m + 1]; // [5][5]
+        dp[0][0] = 0; // 0 items, 0 weight -> 0 value
+        for (int j = 0; j <= m; j++) {
+            dp[0][j] = 0; // 0 items cannot form weight j, hence value 0
+        }
+    
+        for (int i = 1; i <= n; i++) {
+            for (int j = 1; j <= m; j++) {
+                dp[i][j] = dp[i - 1][j]; // 0
+                if (j - A[i - 1] >= 0) {
+                   dp[i][j] = Math.max(dp[i][j], dp[i - 1][j - A[i - 1]] + V[i - 1]); 
+                }
+            }
+        }
+        return dp[n][m];
+    }
+}
+
+// Rolling array
+public class Solution {
+    public int backPackII(int m, int[] A, int V[]) {
+        if (A == null || V == null || A.length != V.length) {
+            return 0;
+        }
+        int n = A.length;
+        int[][] dp = new int[2][m + 1]; // [5][5]
+        dp[0][0] = 0; // 0 items, 0 weight -> 0 value
+        for (int j = 0; j <= m; j++) {
+            dp[0][j] = 0; // 0 items cannot form weight j, hence value 0
+        }
+		int curr = 0, prev;
+    
+        for (int i = 1; i <= n; i++) {
+			// rolling index
+			prev = curr;
+			curr = 1 - prev;
+            for (int j = 1; j <= m; j++) {
+                dp[curr][j] = dp[prev][j]; // 0
+                if (j - A[i - 1] >= 0) {
+                   dp[curr][j] = Math.max(dp[curr][j], dp[prev][j - A[i - 1]] + V[i - 1]); 
+                }
+            }
+        }
+        return dp[curr][m];
+    }
+}
+
+
+/*
+Previous Notes.
 	Thoughts:
 	In Backpack I, we store true/false to indicate the largest j in last dp row. 
 	Here, we can store dp[i][j] == max value. 

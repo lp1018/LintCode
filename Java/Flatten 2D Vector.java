@@ -1,3 +1,19 @@
+M
+1534317715
+tags: Design
+
+Implement an iterator to flatten a 2d vector.
+
+Just move pointers carefully with next(), hashNext()
+
+#### Basic Implementation using x, y corrdinate
+- 就是把2D list里面的element全部遍历一遍。
+- 跟一个nxn的matrix遍历，是没区别的拉; 所有来个x,y，把2d list跑一变。
+
+#### Always return item at index 0, and remove from list?
+- list 方便remove, 考虑吧reduce input vector (就像给的是linked list 一样)
+
+```
 /*
 Implement an iterator to flatten a 2d vector.
 
@@ -80,3 +96,4 @@ public class Vector2D {
  * Vector2D i = new Vector2D(vec2d);
  * while (i.hasNext()) v[f()] = i.next();
  */
+```

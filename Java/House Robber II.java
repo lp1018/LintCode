@@ -1,14 +1,23 @@
 M
+1523329114
+tags: DP, Sequence DP, Status DP
 
-和House Robber I 类似,  DP.
+和House Robber I 类似, 搜刮房子, 相邻不能动. 特点是: 现在nums排成了圈, 首尾相连.
 
-根据dp[i-1]是否被rob来讨论dp[i]: dp[i] = Math.max(dp[i-1], dp[i - 2] + nums[i - 1]);
+#### Sequence DP
+- dp[i][status]: 在 status=[0,1] 情况下, 前i个 房子拿到的 max rob gain. status=0, 1st house robbed; status=1, 1st house skipped
+- 根据dp[i-1]是否被rob来讨论dp[i]: dp[i] = Math.max(dp[i-1], dp[i - 2] + nums[i - 1]);
+- 特别的是，末尾的last house 和 first house相连. 这里就需要分别讨论两种情况: 第一个房子被搜刮, 或者第一个房子没被搜刮
+- be careful with edge case nums = [0], only with 1 element.
+- Time,space: O(n)
 
-特别的是，末尾的last house 和 first house相连。这里就需要分别讨论两种情况:    
-1. 最后一个房子被rob    
-2. 最后一个房子没被rob   
+#### 两个状态
+- 是否搜刮了第一个房子, 分出两个branch, 可以看做两种状态.
+- 可以考虑用两个DP array; 也可以加一dp维度, 补充这个状态.
+- 连个维度表示的是2种状态(1st house being robbed or not); 这两种状态是平行世界的两种状态, 互不相关.
 
-两种情况做完，综合对比一下.
+#### Rolling array
+- 与House Robber I一样, 可以用%2 来操作rolling array, space reduced to O(1)
 
 ```
 /*
@@ -31,9 +40,131 @@ Subscribe to see which companies asked this question
  Dynamic Programming
 Hide Similar Problems (E) House Robber (M) Paint House (E) Paint Fence (M) House Robber III
 
-
-
 */
+
+// Sequence DP, new dp[n + 1][2]
+class Solution {
+    public int rob(int[] nums) {
+        if (nums == null || nums.length == 0) {
+            return 0;
+        } else if (nums.length == 1) {
+            return nums[0];
+        }
+        int n = nums.length;
+        long[][] dp = new long[n + 1][2];
+        dp[0][0] = 0; // not picking any number
+        dp[1][0] = 0; // not picking nums[0]
+        dp[1][1] = nums[0]; // pick nums[0]
+        
+        for (int i = 2; i < n; i++) { // skip the (i = n) case
+            dp[i][0] = Math.max(dp[i - 1][0], dp[i - 2][0] + nums[i - 1]);
+            dp[i][1] = Math.max(dp[i - 1][1], dp[i - 2][1] + nums[i - 1]);
+        }
+        // i = n;
+        dp[n][0] = Math.max(dp[n - 1][0], dp[n - 2][0] + nums[n - 1]);
+        dp[n][1] = dp[n - 1][1]; // because the next-connected dp[0][1] was picked
+        
+        return (int) Math.max(dp[n][0], dp[n][1]);
+    }
+}
+
+// rolling array, O(1) space
+class Solution {
+    public int rob(int[] nums) {
+        if (nums == null || nums.length == 0) {
+            return 0;
+        } else if (nums.length == 1) {
+            return nums[0];
+        }
+        int n = nums.length;
+        long[][] dp = new long[2][2];
+        dp[0][0] = 0; // not picking any number
+        dp[1][0] = 0; // not picking nums[0]
+        dp[1][1] = nums[0]; // pick nums[0]
+        
+        for (int i = 2; i < n; i++) { // spare the (i = n) case
+            dp[i % 2][0] = Math.max(dp[(i - 1) % 2][0], dp[(i - 2) % 2][0] + nums[i - 1]);
+            dp[i % 2][1] = Math.max(dp[(i - 1) % 2][1], dp[(i - 2) % 2][1] + nums[i - 1]);
+        }
+        // i = n;
+        dp[n % 2][0] = Math.max(dp[(n - 1) % 2][0], dp[(n - 2) % 2][0] + nums[n - 1]);
+        dp[n % 2][1] = dp[(n - 1) % 2][1];
+        
+        return (int) Math.max(dp[n % 2][0], dp[n % 2][1]);
+    }
+}
+/*
+Thougths:
+If there is a circle, which give 2 branches: index i == 0 was robbed, or index i == 0 was not robbed.
+Create the 2nd dimension for this status. dp[i][j], where j = 0 or 1.
+dp[i][0]: if index i = 0 was not robbed, what's the max at i.
+dp[i][1]: if index i = 0 was robbed, what's the max at i.
+Note:
+1. Deal with final position with extra care.
+2. Initialize the dp carefully
+*/
+class Solution {
+    public int rob(int[] nums) {
+        if (nums == null || nums.length == 0) {
+            return 0;
+        } else if (nums.length == 1) {
+            return nums[0];
+        }
+        int n = nums.length;
+        int[][] dp = new int[n][2];
+        // index i = 0, not robbed
+        dp[0][0] = 0;
+        dp[1][0] = nums[1];
+        // index i = 0, robbed
+        dp[0][1] = nums[0];
+        dp[1][1] = dp[0][1];
+        
+        for (int i = 2; i < n; i++) {
+            if (i == n - 1) {
+                dp[i][0] = Math.max(dp[i - 1][0], dp[i -2][0] + nums[i]);
+                dp[i][1] = dp[i - 1][1];
+            } else {
+                dp[i][0] = Math.max(dp[i - 1][0], dp[i -2][0] + nums[i]);
+                dp[i][1] = Math.max(dp[i - 1][1], dp[i -2][1] + nums[i]);
+            }
+        }
+        return Math.max(dp[n - 1][0], dp[n - 1][1]);
+    }
+}
+/*
+Thougths:
+Rolling array:
+index [i] is only calculated based on prior [i - 1] and [i - 2].
+[i - 1] and [i - 2] can be distinguished by using %2.
+*/
+class Solution {
+    public int rob(int[] nums) {
+        if (nums == null || nums.length == 0) {
+            return 0;
+        } else if (nums.length == 1) {
+            return nums[0];
+        }
+        int n = nums.length;
+        int[][] dp = new int[2][2];
+        // index i = 0, not robbed
+        dp[0][0] = 0;
+        dp[1][0] = nums[1];
+        // index i = 0, robbed
+        dp[0][1] = nums[0];
+        dp[1][1] = dp[0][1];
+        
+        for (int i = 2; i < n; i++) {
+            if (i == n - 1) {
+                dp[i % 2][0] = Math.max(dp[(i - 1) % 2][0], dp[(i - 2) % 2][0] + nums[i]);
+                dp[i % 2][1] = dp[(i - 1) % 2][1];
+            } else {
+                dp[i % 2][0] = Math.max(dp[(i - 1) % 2][0], dp[(i - 2) % 2][0] + nums[i]);
+                dp[i % 2][1] = Math.max(dp[(i - 1) % 2][1], dp[(i - 2) % 2][1] + nums[i]);
+            }
+        }
+        return Math.max(dp[(n - 1) % 2][0], dp[(n - 1) % 2][1]);
+    }
+}
 
 /*
 	Each house depends on front and back houses

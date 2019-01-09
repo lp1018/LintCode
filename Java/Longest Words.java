@@ -1,3 +1,14 @@
+E
+1531457022
+tags: Hash Table, String
+
+给一串String, 找到最长的长度, 把最长的String全都return
+
+#### Hash Table
+- <Integer,List<String>>
+- 存最长值, 最后map.get(max) 
+
+```
 /*
 Given a dictionary, find all of the longest words in the dictionary.
 
@@ -36,36 +47,29 @@ One pass:
 1. Use hashmap: <lengthOfString, ArrayList<String>>
 2. keep track of the longest length
 
-Review:
-Map: put, get
-ArrayList: add
-We can get a value from map, and change directly on it, if that's an object (basically refer to the original object)
 */
 
-
-class Solution {
-    /**
-     * @param dictionary: an array of strings
-     * @return: an arraylist of strings
-     */
-    ArrayList<String> longestWords(String[] dictionary) {
+/*
+Thoughts:
+1. one pass, save in <Integer, List>.
+2. Maintain max length
+3. return
+*/
+public class Solution {
+    public List<String> longestWords(String[] dictionary) {
     	if (dictionary == null || dictionary.length == 0) {
     		return null;
     	}
-    	HashMap<Integer, ArrayList<String>> map = new HashMap<Integer, ArrayList<String>>();
-    	int longestLength = 0;
+    	Map<Integer, List<String>> map = new HashMap<>();
+    	int max = 0;
 
-    	for (int i = 0; i < dictionary.length; i++) {
-    		int strLength = dictionary[i].length();
-    		if (map.containsKey(strLength)) {
-    			map.get(strLength).add(dictionary[i]);
-    		} else {
-    			ArrayList<String> list = new ArrayList<String>();
-    			list.add(dictionary[i]);
-    			map.put(strLength, list);
-    		}
-    		longestLength = strLength > longestLength ? strLength : longestLength;
+    	for (String word : dictionary) {
+    		int length = word.length();
+        map.putIfAbsent(length, new ArrayList<>());
+    		map.get(length).add(word);
+    		max = Math.max(max, length);
     	}
-    	return map.get(longestLength);
+    	return map.get(max);
     }
-};
+}
+```

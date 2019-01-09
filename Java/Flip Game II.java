@@ -1,26 +1,49 @@
-12.06.2015 recap:
-注意：不要乱改input s. recursive call 需要用原始的input s.
+M
+1528875498
+tags: DFS, Backtracking, DP
 
-这个题目李特是屌炸天的。
-我飞了九牛二虎之力（路子对），但是代码写的七荤八素，好长好长好长好长的。
-结果正解，三四行就搞定了。真是心有不甘啊。
-想法如下：
-保证p1能胜利，就必须保持所有p2的move都不能赢。
-同时，p1只要在可走的Move里面，有一个move可以赢就足够了。
-（题目里面用一个for loop + 只要 满足条件就return true来表达 OR的意思：p1不同的路子，赢一种就行了）
-p1: player1
-p2: player2
+String 只包含 + , - 两个符号. 两个人轮流把consecutive连续的`++`, 翻转成 `--`.
+
+如果其中一个人再无法翻转了, 另一个人就赢. 求: 给出string, 先手是否能赢.
+
+#### Backtracking
+- curr player 每走一步, 就生成一种新的局面, dfs on this
+- 等到dfs结束, 不论成功与否, 都要backtracking
+- curr level: 把"++" 改成 "--"; backtrack的时候, 改回 '--'
+- 换成boolean[] 比 string/stringBuilder要快很多, 因为不需要重新生成string.
+- ++ 可以走 (n - 1)个位置: 
+- T(N) = (N - 2) * T(N - 2) = (N - 4) * (N - 2) * T(N - 4) ... = O(N!)
+
+##### iterate based on "++"
+- 做一个String s的 replica: string or stringBuilder
+- 每次dfs后, 然后更替里面的字符 "+" => "-"
+- 目的只是Mark已经用过的index
+- 真正的dfs 还是在 original input string s 身上展开
+- 每次都重新生成substring, 并不是很efficient
+
+##### Game theory
+- 保证p1能胜利，就必须保持所有p2的move都不能赢
+- 或者说, 在知道棋的所有情况时, 只要p2有一种路子会输, p1就一定能走对路能赢.
+- 同时，p1只要在可走的Move里面，有一个move可以赢就足够了。
+- p1: player1, p2: player2
+
+#### O(N^2) 的 DP
+- 需要Game Theory的功底, Nim game. https://www.jiuzhang.com/qa/941/
+- http://www.1point3acres.com/bbs/thread-137953-1-1.html
+- TODO: https://leetcode.com/problems/flip-game-ii/discuss/73954/Theory-matters-from-Backtracking(128ms)-to-DP-(0ms)
 
 ```
 /*
 You are playing the following Flip Game with your friend: 
 Given a string that contains only these two characters: + and -, 
 you and your friend take turns to flip two consecutive "++" into "--". 
-The game ends when a person can no longer make a move and therefore the other person will be the winner.
+The game ends when a person can no longer make a move and 
+therefore the other person will be the winner.
 
 Write a function to determine if the starting player can guarantee a win.
 
-For example, given s = "++++", return true. The starting player can guarantee a win by flipping the middle "++" to become "+--+".
+For example, given s = "++++", return true. 
+The starting player can guarantee a win by flipping the middle "++" to become "+--+".
 
 Follow up:
 Derive your algorithm's runtime complexity.
@@ -28,28 +51,91 @@ Derive your algorithm's runtime complexity.
 Tags: Backtracking
 Similar Problems: (E) Nim Game, (E) Flip Game
 */
+// DFS, over 65%
+public class Solution {
+    public boolean canWin(String s) {
+        if (s == null || s.length() < 2) {
+            return false;
+        }
+        boolean[] sign = new boolean[s.length()];
+        for (int i = 0; i < sign.length; i++) sign[i] = s.charAt(i) == '+';
+        return dfs(sign);
+    }
+
+    public boolean dfs(boolean[] sign) {
+        for (int i = 0; i < sign.length - 1; i++) {
+            if (sign[i] && sign[i + 1]) {
+                setSign(sign, i, false);
+                // When opponent is possible to lose, return true for curr player
+                if (!dfs(sign)) {
+                    setSign(sign, i, true);
+                    return true;
+                }
+                setSign(sign, i, true);
+            }
+        }
+        return false;
+    }
+
+    private void setSign(boolean[] sign, int i, boolean value) {
+        sign[i] = value;
+        sign[i + 1] = value;
+    }
+}
+
+
 
 /*
-    recap: 12.06.2015
-    Make sure to use a new string, and do not alter the original input s when calling recursively on canWin.
+Thoughts:
+DFS, search by replace '++' with "--" at each possible spot.
 */
 
+class Solution {
+    public boolean canWin(String s) {
+        if (s == null || s.length() < 2) {
+            return false;
+        }
+        return search(new StringBuilder(s));
+    }
+    
+    public boolean search(StringBuilder sb) {
+        for (int i = 0; i < sb.length() - 1; i++) {
+            if (sb.substring(i, i + 2).equals("++")) {
+                sb.replace(i, i + 2, "--");
+                if (!canWin(sb.toString())) {
+                    sb.replace(i, i + 2, "++");                    
+                    return true;
+                }
+                sb.replace(i, i + 2, "++");
+                
+            }
+        }
+        return false;
+    }
+}
+
+
+/*
+    SLOW
+    Make sure to use a new string, and do not alter the original input s 
+    when calling recursively on canWin.
+    Much slower, since it's creating string in every dfs
+*/
 public class Solution {
   public static boolean canWin(String s) {
         if (s == null || s.length() <= 1) {
             return false;
         }
-        String str = new String(s);
-        while (str.indexOf("++") != -1) {
-            int index = str.indexOf("++");
+        StringBuilder sb = new StringBuilder(s);
+        while (sb.indexOf("++") != -1) {
+            int index = sb.indexOf("++");
             if(!canWin(s.substring(0, index) + "--" + s.substring(index + 2))) {
                 return true;
             }
-            str = str.substring(0, index) + "-" + str.substring(index + 1);
+            sb.replace(index, index + 1, "-");
         }
         return false;
     }
-
 }
 
 
@@ -63,7 +149,7 @@ For loop and the if statement works as 'OR': just need one of the p1's movement 
 */
 
 public class Solution {
-  public static boolean canWin(String s) {
+  public boolean canWin(String s) {
         if (s == null || s.length() <= 1) {
             return false;
         }

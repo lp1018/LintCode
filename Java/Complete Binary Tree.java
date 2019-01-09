@@ -1,17 +1,23 @@
 E
+1522011523
+tags: Tree, BFS
 
-BFS   
+A complete binary tree is a binary tree in which every level, except possibly the last,
 
-Use a flag . 当出现了第一次有 null children的node的时候，   
-说明complete tree的最低level出现了。    
-自此以后，queue再不该有node再有child, queue后面出现的node的左右孩子应该都是null.    
+is completely filled, and all nodes are as far left as possible
+
+#### BFS
+- 当出现了第一次有 null children的node的时候, 说明到了leaf level, mark flag = true;
+- 自此以后，queue再不该有node再有child; queue后面出现的node的left/right child应该都是null
+- 否则就是有问题, return false;
 
 
 ```
 /*
-Check a binary tree is completed or not. A complete binary tree is not binary tree that every level is completed filled except the deepest level. In the deepest level, all nodes must be as left as possible. See more definition
+Check a binary tree is completed or not. 
+A complete binary tree is a binary tree that every level is completed filled except the deepest level. 
+In the deepest level, all nodes must be as left as possible. See more definition
 
-Have you met this question in a real interview? Yes
 Example
     1
    / \
@@ -86,7 +92,7 @@ public class Solution {
     	return true;
     }
 
-
 }
+
 
 ```

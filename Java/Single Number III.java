@@ -1,3 +1,9 @@
+M
+tags: Bit Manipulation
+
+TODO: wut?
+```
+
 /*
 Given 2*n + 2 numbers, every numbers occurs twice except two, find them.
 
@@ -49,3 +55,5 @@ public class Solution {
     }
 }
 
+
+```

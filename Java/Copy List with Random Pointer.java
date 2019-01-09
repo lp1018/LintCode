@@ -1,10 +1,18 @@
 M
+1527962398
+tags: Hash Table, Linked List
+time: O(n)
+space: O(1)
 
-Basic Implementation, 其中用了一下HashMap:  
+deep copy linked list. linked list 上有random pointer to other nodes.
 
-遍历head.next .... null.    
-每一步都check map里面有没有head。没有？加上。    
-每一步都check map里面有没有head.random。没有？加上。
+#### HashMap, Linked List
+- Basic Implementation of copy linked list:
+- use node and dummy to hold new list, 遍历head.next .... null.    
+- Map 在这里用来: 1. avoid creating same node; 2. return the item if existing
+- map 的 key全部是old object, 新的key全部是 newly created object
+- 每一步都check map里面有没有head. 没有? 加上
+- 每一步都check map里面有没有head.random. 没有? 加上
 
 ```
 /*
@@ -31,7 +39,6 @@ LeetCode: Hard
  */
 
 /*
-    Recap: 12.10.2015
     Iterative through the list. 
     Use a dummyHead and return dummyHead.next at the end.
     In each iteration, check if Head is already exist, or make a new one
@@ -41,17 +48,17 @@ LeetCode: Hard
     border case: if head == null, return null
 */
 
-public class Solution {
+class Solution {
     public RandomListNode copyRandomList(RandomListNode head) {
         if (head == null) {
-            return null;
+            return head;
         }
         //creat node, used to link all nodes
         RandomListNode node = new RandomListNode(0);
         RandomListNode dummy = node;
         
         //HashMap to mark node
-        HashMap<RandomListNode, RandomListNode> map = new HashMap<RandomListNode, RandomListNode>();
+        HashMap<RandomListNode, RandomListNode> map = new HashMap<>();
         
         while(head != null) {
             //process head. (we already know head!=null)
